@@ -1,2 +1,4 @@
-train_loss, train_acc, test_loss, test_acc
-
+train_loss,train_acc,test_loss,test_acc,name
+12,40,21,50,frsst
+92,45,21,90,second
+13,50,89,50,third
