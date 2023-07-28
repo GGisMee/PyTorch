@@ -1,0 +1,2 @@
+train_loss,train_acc,test_loss,test_acc,name
+10,23,63,95,hello

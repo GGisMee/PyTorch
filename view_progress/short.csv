@@ -1,2 +1,0 @@
-train_loss, train_acc, test_loss, test_acc, epoch
-10,30,12,50,1
