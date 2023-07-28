@@ -1,4 +1,0 @@
-# ideer
-1.
-* kan antingen göra ett linje diagram med alla iterationer under en epochs runda, 
-* eller flera histogram i fyra hörn med titlar över olika skillnader och förbättringar, har även en clear funktion

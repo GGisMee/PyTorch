@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from sys import path
 import matplotlib.pyplot as plt
+from os import listdir
+
 class progress_viewer():
     def __init__(self, name):
         """initialize the progress viewer"""
@@ -19,13 +21,16 @@ class progress_viewer():
         if len(self.df[self.df["name"] == name].index) != 0:
             if replace:
                 index = ((self.df[self.df["name"] == name].index)[0])
+
                 without_old_df = (self.df[self.df["name"] != name])
-                without_old_df[index] = [train_loss, train_acc, test_loss, test_acc, name]
-                print(without_old_df)
+                without_old_df.loc[index] = [train_loss, train_acc, test_loss, test_acc, name]
+                self.df = without_old_df.sort_index()
+                
             else:
                 print("Name already exists in Dataframe, either change name or activate replace as true")
-        return
-        self.df.loc[len(self.df)] = [train_loss, train_acc, test_loss, test_acc, name]
+                return
+        else:
+            self.df.loc[len(self.df)] = [train_loss, train_acc, test_loss, test_acc, name]
         self.df.to_csv(f"{path[0]}/{self.name}.csv", index=False)
     def show(self, scatter: bool = True, width: int = 5):
         name = np.array(self.df["name"])
@@ -36,7 +41,7 @@ class progress_viewer():
 
         labels = ["Train loss", "Train accuracy", "Test loss", "Test accuracy"]
         label_colors = ['red', 'green', 'blue', 'orange']
-        plt.figure(figsize=(12,6))
+        plt.figure(figsize=(8,4))
 
         if scatter:
             plt.scatter(name, train_loss, c=label_colors[0], s=width*40)
@@ -55,6 +60,21 @@ class progress_viewer():
             plt.plot(name, test_acc, color=label_colors[3], linewidth=width, label = "test accuracy")
             plt.legend()
         plt.show()
-
-d = progress_viewer("data")
-d.add_data(10,20, 30, 40, "frsst", 1)
+    def show_apart(self, index, scatter: bool = True, width: int = 5):
+        """choose by index from: train_loss, train_accuracy, test_loss, test_accuracy"""
+        name = np.array(self.df["name"])
+        chosen = ["train_loss", "train_acc", "test_loss", "test_acc"][index]
+        color = ['red', 'green', 'blue', 'orange'][index]
+        data = np.array(self.df[chosen])
+        plt.figure(figsize=(8,4))
+        if scatter:
+            plt.scatter(name, data, c=color, s=width*40)
+            plt.title(f"Plot of {chosen}")
+        plt.show()
+    def clear(self):
+        self.df = pd.DataFrame(columns=self.df.columns)
+        self.df.to_csv(f"{path[0]}/{self.name}.csv", index=False)
+        
+def all_csv():
+    all_files = listdir(path[0])
+    return [file for file in all_files if file.endswith(".csv")]
