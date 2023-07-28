@@ -1,23 +1,23 @@
-from pathlib import Path
 import numpy as np
 import pandas as pd
-from sys import path
 import matplotlib.pyplot as plt
-from os import listdir
-
+import os
 class progress_viewer():
     def __init__(self, name):
         """initialize the progress viewer"""
         self.name = name
-        if Path(f"{path[0]}/{self.name}.csv").is_file():
-            #print("Allready exists")
-            self.df = pd.read_csv(f"{path[0]}/{self.name}.csv")
+        self.csv_path = f"{os.getcwd()}/{self.name}.csv"
+        if os.path.exists(self.csv_path):
+            #print("Already exists")
+            self.df = pd.read_csv(self.csv_path)
         else:
             #print("Doesn't exist")
             self.df= pd.DataFrame(columns=["train_loss","train_acc","test_loss","test_acc","name"])
-            self.df.to_csv(f"{path[0]}/{self.name}.csv", index=False)
+            self.df.to_csv(self.csv_path, index=False)
     def add_data(self,train_loss, train_acc, test_loss, test_acc, name, replace=False):
-        # Replace gives the ability to replace a name if it already exists in the df
+        """ Inserts data to csv
+        
+        Replace gives the ability to replace a name if it already exists in the df"""
         if len(self.df[self.df["name"] == name].index) != 0:
             if replace:
                 index = ((self.df[self.df["name"] == name].index)[0])
@@ -31,8 +31,9 @@ class progress_viewer():
                 return
         else:
             self.df.loc[len(self.df)] = [train_loss, train_acc, test_loss, test_acc, name]
-        self.df.to_csv(f"{path[0]}/{self.name}.csv", index=False)
+        self.df.to_csv(self.csv_path, index=False)
     def show(self, scatter: bool = True, width: int = 5):
+        """if true: Scatter plot, else: line plot"""
         name = np.array(self.df["name"])
         train_loss = np.array(self.df["train_loss"])
         train_acc = np.array(self.df["train_acc"])
@@ -61,7 +62,9 @@ class progress_viewer():
             plt.legend()
         plt.show()
     def show_apart(self, index, scatter: bool = True, width: int = 5):
-        """choose by index from: train_loss, train_accuracy, test_loss, test_accuracy"""
+        """choose by index from: train_loss, train_accuracy, test_loss, test_accuracy
+        
+        if true: Scatter plot, else: line plot"""
         name = np.array(self.df["name"])
         chosen = ["train_loss", "train_acc", "test_loss", "test_acc"][index]
         color = ['red', 'green', 'blue', 'orange'][index]
@@ -72,9 +75,14 @@ class progress_viewer():
             plt.title(f"Plot of {chosen}")
         plt.show()
     def clear(self):
+        """clears all the rows of data"""
         self.df = pd.DataFrame(columns=self.df.columns)
-        self.df.to_csv(f"{path[0]}/{self.name}.csv", index=False)
+        self.df.to_csv(self.csv_path, index=False)
+    def delete(self):
+        os.remove(self.csv_path)
         
 def all_csv():
-    all_files = listdir(path[0])
+    all_files = os.listdir(os.getcwd())
     return [file for file in all_files if file.endswith(".csv")]
+d = progress_viewer("viewer_data")
+d.add_data(19,15,27,49, "1")
