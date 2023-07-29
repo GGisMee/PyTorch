@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from sys import path
 class progress_viewer():
     def __init__(self, name):
         """initialize the progress viewer"""
@@ -16,8 +17,10 @@ class progress_viewer():
             self.df.to_csv(self.csv_path, index=False)
     def add_data(self,train_loss, train_acc, test_loss, test_acc, name, replace=False):
         """ Inserts data to csv
-        
+
         Replace gives the ability to replace a name if it already exists in the df"""
+        train_loss *= 100
+        test_loss *= 100
         if len(self.df[self.df["name"] == name].index) != 0:
             if replace:
                 index = ((self.df[self.df["name"] == name].index)[0])
@@ -28,10 +31,11 @@ class progress_viewer():
                 
             else:
                 print("Name already exists in Dataframe, either change name or activate replace as true")
+                print(self.df["name"], name)
                 return
         else:
             self.df.loc[len(self.df)] = [train_loss, train_acc, test_loss, test_acc, name]
-        self.df.to_csv(self.csv_path, index=False)
+        print([train_loss, train_acc, test_loss, test_acc, name])
     def show(self, scatter: bool = True, width: int = 5):
         """if true: Scatter plot, else: line plot"""
         name = np.array(self.df["name"])
@@ -77,12 +81,9 @@ class progress_viewer():
     def clear(self):
         """clears all the rows of data"""
         self.df = pd.DataFrame(columns=self.df.columns)
+    def all_csv():
+        all_files = os.listdir(path[0])
+        return [file for file in all_files if file.endswith(".csv")]
+    def save(self):
         self.df.to_csv(self.csv_path, index=False)
-    def delete(self):
-        os.remove(self.csv_path)
-        
-def all_csv():
-    all_files = os.listdir(os.getcwd())
-    return [file for file in all_files if file.endswith(".csv")]
-d = progress_viewer("viewer_data")
-d.add_data(19,15,27,49, "1")
+
