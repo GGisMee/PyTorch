@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
+import torch as pt
 import matplotlib.pyplot as plt
 import os
 from sys import path
 
-# data manager, original class
+#* data viewers
 class data_manager:
     def __init__(self, column_names: np.array = []):
         """A progress data manager"""
@@ -30,15 +31,13 @@ class data_manager:
     def all_csv():
         all_files = os.listdir(path[0])
         return [file for file in all_files if file.endswith(".csv")]
-
-
 class progress_viewer(data_manager):
     def __init__(self):
         super().__init__(column_names = ["train_loss","train_acc","test_loss","test_acc"])
     def add(self,train_loss, train_acc, test_loss, test_acc):
         """just a packager for parant add"""
         super().add([train_loss*100, train_acc, test_loss*100, test_acc])
-    def view(self):
+    def show(self):
         for column_name in self.df.columns:
             column_value = self.df[column_name].to_numpy()
             plt.plot(column_value, label=column_name)
@@ -48,7 +47,6 @@ class progress_viewer(data_manager):
         super().save(name, path)
     def load(self,name: str = "dataframe_prog_viewer", path = path[0]):
         super().load(name, path)
-
 class difference_viewer(data_manager):
     def __init__(self):
         super().__init__(column_names = ["train_loss","train_acc","test_loss","test_acc", "name"])
@@ -78,3 +76,26 @@ class difference_viewer(data_manager):
         super().save(name, path)
     def load(self,name: str = "dataframe_diff_viewer", path = path[0]):
         super().load(name, path)
+
+#* comparation
+"""
+def view_results(X_train, y_train, X_test, y_test, model):
+    plt.figure(figsize=(12,6))
+    plt.subplot(1,2,1)
+    plt.title("Train")
+    helper_functions.plot_decision_boundary(model, X_train, y_train)
+    plt.subplot(1,2,2)
+    plt.title("Test")
+    helper_functions.plot_decision_boundary(model, X_test, y_test)"""
+
+#* save load model
+# Saving our PyTorch model
+def save_model(model, name:str = "model", path = path[0]):
+    
+    model_full_path = f"{path}/{name}.pth" # pth, pth eller pt for pytorch
+    pt.save(obj=model.state_dict(), f=model_full_path)
+def load_model(model_class, name:str = "model", path = path[0], args_arr: list = []):
+    loaded_model = model_class(*args_arr)
+    loaded_model.load_state_dict(pt.load(f=f"{path}/{name}.pth")) # f is a file like object, that can be stringified
+    return loaded_model
+
