@@ -4,8 +4,6 @@ import torch as pt
 import matplotlib.pyplot as plt
 import os
 from sys import path
-from typing import List, Callable, Union
-
 
 #* data viewers
 class data_manager:
@@ -259,20 +257,3 @@ class Model_operations:
 
         print(f"Test loss: {test_loss:.4f}, Test acc: {test_acc:.4f}") if show else None
         return test_loss, test_acc
-
-    # Chains functions with initial_data as the data in the first function  
-    def function_chainer(initial_data:Union[tuple, List], func_list: List[Callable]) -> any:
-        """Chains functions in func_list with input as initial input and returns result
-
-        args:
-            initial_data (tuple): The initial data to be passed as arguments to the first function. 
-            func_list (List[Callable]): A list of functions to be executed sequentially. 
-            
-        Order: [a,b,c] -> c(b(a(initial_data)))
-
-        returns:
-            any: The final output after applying all the functions."""
-        output = func_list[0](*initial_data)
-        for func in func_list[1:]:
-            output = func(output)
-        return output
