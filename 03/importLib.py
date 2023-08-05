@@ -24,7 +24,11 @@ def import_from_github(https, file_name: str = "chosen from end of link", direct
         print(f"{file_path} already exists")
     else:
         print(f"{file_path} doesn't exist, download")
-        request = requests.get(https)
+        try:
+            request = requests.get(https)
+        except requests.exceptions.MissingSchema:
+            print("URL not found")
+            return False
         with open(file_path, "wb") as f:
             f.write(request.content)
     file_name = file_name.split(".")[0]
