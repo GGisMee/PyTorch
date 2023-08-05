@@ -149,7 +149,7 @@ class Model_operations:
         model.eval()
         with pt.inference_mode():
             for X,y in data_loader:
-                X.to(device), y.to(device)
+                X,y = X.to(device), y.to(device)
                 y_pred_logits = model(X)
 
                 # Accumulate the loss and acc values per batch
@@ -209,8 +209,7 @@ class Model_operations:
         train_loss /= len(dataloader)
         train_acc /= len(dataloader)
 
-        if show:
-            print(f"train loss: {train_loss}, train accuracy: {train_acc}")
+        print(f"train loss: {train_loss}, train accuracy: {train_acc}") if show else None
         return (train_loss, train_acc) 
 
     # Steps through the test loop
@@ -256,6 +255,5 @@ class Model_operations:
             test_loss /= len(dataloader)
             test_acc /= len(dataloader)
 
-        if show:
-            print(f"Test loss: {test_loss:.4f}, Test acc: {test_acc:.4f}") 
+        print(f"Test loss: {test_loss:.4f}, Test acc: {test_acc:.4f}") if show else None
         return test_loss, test_acc
