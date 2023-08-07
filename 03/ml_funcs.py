@@ -115,7 +115,18 @@ def load_model(model_class, name:str = "model", path = path[0]) -> pt.nn.Module:
     loaded_model.load_state_dict(pt.load(f=f"{name}/{path}.pth")) # f is a file like object, that can be stringified
     return load_model
 
-
+#* view an image
+def view_image(img:pt.Tensor, label:str = "", cmap_v="gray"):
+    """views an image
+    
+    args:
+        img: the image
+        label: label shown above the image
+        cmap_v: a color map value"""
+    plt.imshow(img, cmap=cmap_v)
+    plt.title(label)
+    plt.axis(False)
+    plt.show()
 
 class Model_operations:
     """Does operations on the chosen model

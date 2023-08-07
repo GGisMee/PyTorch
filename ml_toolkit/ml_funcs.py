@@ -91,8 +91,8 @@ def view_results(X_train, y_train, X_test, y_test, model):
     plt.title("Test")
     helper_functions.plot_decision_boundary(model, X_test, y_test)
 
-#* save load model
-# Saving our PyTorch model
+#* save and load PyTorch Model
+
 def save_model(model, name:str = "model", path = path[0]):
     """loads a model
     
@@ -117,8 +117,14 @@ def load_model(model_class, name:str = "model", path = path[0]) -> pt.nn.Module:
     loaded_model.load_state_dict(pt.load(f=f"{name}/{path}.pth")) # f is a file like object, that can be stringified
     return load_model
 
+#* view an image
+def view_image(img:pt.Tensor, label:str):
+    plt.imshow(img)
+    plt.title(label)
+    plt.axis(False)
+    plt.show()
 
-
+#* Does Model operations
 class Model_operations:
     """Does operations on the chosen model
     
