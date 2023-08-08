@@ -59,6 +59,10 @@ class difference_viewer(data_manager):
         elif replace:
             self.df.loc[self.df["name"]==name, ["test_loss", "test_acc", "time"]] = [test_loss, test_acc, time]
             print(self.df)
+    def add_dict(self,model_results:dict, time, name, replace=False):
+        """A packager for add, model_results from Model_operations.eval_model()"""
+        loss, acc = list(model_results.values())[1:]
+        self.add(loss, acc,time, name, replace)
     def view(self):
         values = self.df.to_numpy().T
         names = values[-1]
@@ -142,8 +146,7 @@ class Model_operations:
                    data_loader: pt.utils.data.DataLoader, 
                    loss_fn: pt.nn.Module,
                    accuracy_fn,
-                   device:str,
-                   return_as: dict | list = dict):
+                   device:str):
         """Evaluates the models performence and returns a dictionary containing the results of model predicting on data_loader
 
         args:
@@ -177,13 +180,10 @@ class Model_operations:
             loss /= len(data_loader)
             acc /= len(data_loader)
         
-        if return_as == dict:
-            return {"model_name":model.__class__.__name__, # only works when model was created with a class
+        return {"model_name":model.__class__.__name__, # only works when model was created with a class
                     "model_loss": loss.item(),
                     "model_acc": acc
                     }
-        elif return_as == list:
-            return [loss.item(), acc]
 
     # Steps through the training loop
     def train_step(model: pt.nn.Module,
