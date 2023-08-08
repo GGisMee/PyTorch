@@ -184,7 +184,6 @@ class Model_operations:
                     }
         elif return_as == list:
             return [loss.item(), acc]
-
     # Steps through the training loop
     def train_step(model: pt.nn.Module,
                dataloader:pt.utils.data.DataLoader,
