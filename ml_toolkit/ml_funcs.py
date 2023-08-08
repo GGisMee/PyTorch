@@ -82,10 +82,7 @@ class difference_viewer(data_manager):
     def load(self,name: str = "dataframe_diff_viewer", path = path[0]):
         super().load(name, path)
 
-d = difference_viewer()
-d.add(10,20,52,"linear")
-d.add(5,40,72,"unlinear")
-d.view()
+
 
 #* comparation
 
