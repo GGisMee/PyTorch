@@ -38,7 +38,7 @@ class progress_viewer(data_manager):
         super().__init__(column_names = ["train_loss","train_acc","test_loss","test_acc"])
     def add(self,train_loss, train_acc, test_loss, test_acc):
         """just a packager for parant add"""
-        super().add([train_loss*100, train_acc, test_loss*100, test_acc])
+        super().add([train_loss, train_acc, test_loss, test_acc])
     def view(self):
         for column_name in self.df.columns:
             column_value = self.df[column_name].to_numpy()
@@ -51,33 +51,41 @@ class progress_viewer(data_manager):
         super().load(name, path)
 class difference_viewer(data_manager):
     def __init__(self):
-        super().__init__(column_names = ["train_loss","train_acc","test_loss","test_acc", "name"])
-    def add(self, train_loss, train_acc, test_loss, test_acc, name, replace=False):
-        """just a packager for parant add"""
+        super().__init__(column_names = ["test_loss","test_acc","time", "name"])
+    def add(self, test_loss, test_acc,time, name, replace=False):
+        """just a packager for parent add"""
         if name not in self.df["name"].values:
-            super().add([train_loss*100, train_acc, test_loss*100, test_acc, name])
+            super().add([test_loss, test_acc, time, name])
         elif replace:
-            self.df.loc[self.df["name"]==name, ["train_loss", "train_acc", "test_loss", "test_acc"]] = [train_loss, train_acc, test_loss, test_acc]
+            self.df.loc[self.df["name"]==name, ["test_loss", "test_acc", "time"]] = [test_loss, test_acc, time]
             print(self.df)
         else:
             print("Row with name already exists, please change name or enable replace")    
-    def show(self):
-        labels = ["Train loss", "Train accuracy", "Test loss", "Test accuracy"]
-        label_colors = ['red', 'green', 'blue', 'orange']
-        plt.figure(figsize=(8,4))
-        train_loss, train_acc, test_loss, test_acc, names = self.df.to_numpy().T
+    def view(self):
+        values = self.df.to_numpy().T
+        names = values[-1]
+        values = values[:-1]
+        colors = ["#8ecae6","#219ebc","#ffb703","#fb8500","#ff006e","#8338ec","#3a86ff","#3a0ca3","#0081a7", "#00afb9", "#fdfcdc", "#fed9b7"]
+        # %timeit get_color_2(names)
+        plt.figure(figsize=(12,6))
 
-        plt.scatter(names, train_loss, label=labels[0], c=label_colors[0])
-        plt.scatter(names, train_acc, label=labels[1], c=label_colors[1])
-        plt.scatter(names, test_loss, label=labels[2], c=label_colors[2])
-        plt.scatter(names, test_acc, label=labels[3], c=label_colors[3])
-        plt.legend()
+        for i,el in enumerate(["Accuracy","Loss","Time"]):
+            print(names, values[i])
+            plt.subplot(1, 3, i+1)
+            plt.bar(names, values[i], color=colors[i*3:3*(i+1)])
+            plt.title(el)
+
         plt.show()
     def save(self,name: str = "dataframe_diff_viewer", path = path[0]):
         print(name, path)
         super().save(name, path)
     def load(self,name: str = "dataframe_diff_viewer", path = path[0]):
         super().load(name, path)
+
+d = difference_viewer()
+d.add(10,20,52,"linear")
+d.add(5,40,72,"unlinear")
+d.view()
 
 #* comparation
 
