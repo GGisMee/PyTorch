@@ -59,8 +59,6 @@ class difference_viewer(data_manager):
         elif replace:
             self.df.loc[self.df["name"]==name, ["test_loss", "test_acc", "time"]] = [test_loss, test_acc, time]
             print(self.df)
-        else:
-            print("Row with name already exists, please change name or enable replace")    
     def view(self):
         values = self.df.to_numpy().T
         names = values[-1]
@@ -76,9 +74,9 @@ class difference_viewer(data_manager):
             plt.title(el)
 
         plt.show()
-    def save(self,name: str = "dataframe_diff_viewer", path = path[0]):
+    def save(self,name: str = "dataframe_diff_viewer", path = path[0], overwrite:bool=False):
         print(name, path)
-        super().save(name, path)
+        super().save(name, path, overwrite)
     def load(self,name: str = "dataframe_diff_viewer", path = path[0]):
         super().load(name, path)
 
