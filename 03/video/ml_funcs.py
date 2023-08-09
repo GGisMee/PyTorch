@@ -131,7 +131,7 @@ def load_model_state_dict(model_class, args:list, name:str = "model", path = pat
     return loaded_model
 
 #* view an image
-def view_image(img:pt.Tensor, label:str, color:plt.cm="gray"):
+def view_image(img:pt.Tensor, label:str, color:plt.cm = "gray"):
     plt.imshow(img,cmap=color)
     plt.title(label)
     plt.axis(False)
