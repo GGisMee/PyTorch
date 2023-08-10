@@ -131,7 +131,7 @@ def load_model_state_dict(model_class, args:list, name:str = "model", path = pat
     return loaded_model
 
 #* view an image
-def view_image(img:pt.Tensor, label:str, color:plt.cm = "gray"):
+def view_image(img:pt.Tensor, label:str, color:plt.cm="gray"):
     plt.imshow(img,cmap=color)
     plt.title(label)
     plt.axis(False)
@@ -301,3 +301,10 @@ class Model_operations:
         for func in func_list[1:]:
             output = func(output)
         return output
+    
+def time_func(start:float, device:str = None):
+    from timeit import default_timer
+    """Returns the time between start and function call"""
+    total_time = default_timer() -start
+    print(f"\nTrain time on {device}: {total_time:.3f} seconds")
+    return total_time
