@@ -145,6 +145,7 @@ class Model_operations:
         eval_model() - evaluates the models performence.
         train_step() - Performs a testing loop step on model going over data_loader.
         test_step() - Performs a testing loop step on model going over data_loader.
+        make_predictions() - Predicts the labels on a Tensor of pictures as Tensors.
 
     """
     # evaluate model
