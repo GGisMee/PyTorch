@@ -3,7 +3,6 @@ from pathlib import Path
 import importlib
 from sys import path
 
-# https://raw.githubusercontent.com/GGisMee/Python/main/libraries/current_directory.py
 def import_from_github(https:str, file_name: str = "chosen from end of link", directory=path[0], load_lib = False):
     """This function is used to import a file to a chosen directory using a github raw link
     
@@ -17,6 +16,7 @@ def import_from_github(https:str, file_name: str = "chosen from end of link", di
         bool: True or False, Success or Fail
         if load_lib: Library
         """
+    file_name.replace("\\", "/")
     file_name = "/".join(map(str,(https.split("/")[-1:]))) if file_name == "chosen from end of link" else file_name
     
     file_path = f"{directory}/{file_name}"
@@ -61,7 +61,6 @@ def import_from_github_using_path(from_path:str, file_name: str = "chosen from e
     https = fr"https://raw.githubusercontent.com/GGisMee/{from_path}"
     return import_from_github(https=https,file_name=file_name, directory= directory, load_lib=load_lib)
 
-import_from_github_using_path(r"PyLibraries/miscs/TimeTester.py")
 def import_from_path(file_name, directory):
     """imports a file from path
     
