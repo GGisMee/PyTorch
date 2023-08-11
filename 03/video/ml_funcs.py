@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import os
 from sys import path
 from typing import List, Callable, Union
+from torchvision import datasets
+from tqdm.auto import tqdm
 
 
 #* data viewers
@@ -93,7 +95,6 @@ class difference_viewer(data_manager):
         super().load(name, path, create)
 
 #* comparation
-
 def view_results(X_train, y_train, X_test, y_test, model):
     import helper_functions
     plt.figure(figsize=(12,6))
@@ -105,38 +106,52 @@ def view_results(X_train, y_train, X_test, y_test, model):
     helper_functions.plot_decision_boundary(model, X_test, y_test)
 
 #* save and load PyTorch Model
-
-def save_model_state_dict(model, name:str = "model", path = path[0]):
-    """loads a model
+class save_load:
+    """Save and load models
     
-    args:
-        model (model_class): the model which:s statedict will be saved
-        name (str): the name of the file where the models state dict will be stored
-        path (str): the directory where the file will be stored in
-    """
-    model_full_path = f"{path}/{name}.pth" # pth, pth eller pt for pytorch
-    pt.save(obj=model.state_dict(), f=model_full_path)
-def load_model_state_dict(model_class, args:list, name:str = "model", path = path[0]) -> pt.nn.Module:
-    """loads a model
-    
-    args:
-        model_class (class): the class of the selected model
-        name (str): the name of the file where the models state dict is stored
-        path (str): the directory where the file is stored in
-    
-    returns:
-        load_model (model_class): the model"""
-    loaded_model = model_class(*args)
-    loaded_model.load_state_dict(pt.load(f=f"{path}/{name}.pth")) # f is a file like object, that can be stringified
-    return loaded_model
+    funcs:
+        save_state_dict(): Saves a models statedict
+        load_state_dict(): Loads a models statedict
+        save_model():
+        load_model():
+        """
+    def save_state_dict(model, name:str = "model", path = path[0]):
+        """saves a models statedict
 
-#* view an image
-def view_image(img:pt.Tensor, label:str, color:plt.cm="gray"):
-    plt.imshow(img,cmap=color)
-    plt.title(label)
-    plt.axis(False)
-    plt.show()
+        args:
+            model (model_class): the model which:s statedict will be saved
+            name (str): the name of the file where the models state dict will be stored
+            path (str): the directory where the file will be stored in
+        """
+        model_full_path = f"{path}/{name}.pth" # pth, pth eller pt for pytorch
+        pt.save(obj=model.state_dict(), f=model_full_path)
+    def load_state_dict(loaded_model, name:str = "model", path = path[0]) -> pt.nn.Module:
+        """loads a models statedict
 
+        args:
+            loaded_model (model): the selected model which the state dict will be loaded on
+            name (str): the name of the file where the models state dict is stored
+            path (str): the directory where the file is stored in
+
+        returns:
+            load_model (model_class): the model"""
+        loaded_model.load_state_dict(pt.load(f=f"{path}/{name}.pth")) # f is a file like object, that can be stringified
+        return loaded_model
+    def save_model(model, name:str = "model", path = path[0]):
+        """Save a whole model
+        
+        args:
+            model: The model which is saved
+            name: The name of the file where the model gets saved
+            path: The path where the file gets stored"""
+        pt.save(obj=model, f=f"{path}/{name}.pth")
+    def load_model(name:str = "model", path = path[0]):
+        """Load a whole model
+        
+        args:
+            name: The name of the file where the model got saved
+            path: The path where the file exists"""
+        pt.load(f=f"{path}/{name}.pth")
 #* Does Model operations
 class Model_operations:
     """Does operations on the chosen model
@@ -286,23 +301,197 @@ class Model_operations:
         print(f"Test loss: {test_loss:.4f}, Test acc: {test_acc:.4f}") if show else None
         return test_loss, test_acc
 
-    # Chains functions with initial_data as the data in the first function  
-    def function_chainer(initial_data:Union[tuple, List], func_list: List[Callable]) -> any:
-        """Chains functions in func_list with input as initial input and returns result
-
+    def make_predictions(model:pt.nn.Module, sample:list, device:pt.device) -> pt.Tensor:
+        """Makes predictions on inputed sample, which should be a list with image tensors inside examplewise [pt.tensor(...),pt.tensor(...),pt.tensor(...),...]
+        
         args:
-            initial_data (tuple): The initial data to be passed as arguments to the first function. 
-            func_list (List[Callable]): A list of functions to be executed sequentially. 
-            
-        Order: [a,b,c] -> c(b(a(initial_data)))
+            model: The model, which the predictions are made from
+            sample: The sample which the model predicts on
+            device: The device the predictions are made on
 
         returns:
-            any: The final output after applying all the functions."""
-        output = func_list[0](*initial_data)
-        for func in func_list[1:]:
-            output = func(output)
-        return output
+            A tensor of the targets/labels which are outputed
+            """
+        pred_probs = []
+        model.to(device)
+        model.eval()
+        with pt.inference_mode():
+            for picture_tensor in sample:
+                # Prepare picture_tensor
+                picture_tensor = pt.unsqueeze(picture_tensor, dim=0).to(device)
+
+                # forward pass
+                y_logits = model(picture_tensor)
+
+                # Get prediction probability (logit -> prediction probability)
+                pred_prob = pt.softmax(y_logits.squeeze(), dim=0)
+
+                # Get pred_prob to cpu, to work with matplotlib
+                pred_probs.append(pred_prob.cpu())
+            
+        # Stack pred probs to turn list to tensor
+        return pt.stack(pred_probs)
+
+    def predict_all(model, dataloader, device, softmax_dim: int = 1, argmax_dim: int= 1):
+        """Make prediction on trained model usin dataloader
+        
+        args:
+            model: the model which predicts on the data
+            dataloader: loader of the data
+            device: the device which the calculations are done on
+            softmax_dim: the dimension that softmax changes on
+            argmax_dim: the dimension that argmax calculates on
+
+        returns:
+            y_preds: list = predictions"""
+        y_preds = []
+        model.eval()
+        with pt.inference_mode():
+            for X, y in tqdm(dataloader, desc="Making predictions..."):
+                # Send data + targets to target device
+                X = X.to(device)
+                # Do the forward pass
+                y_logits = model(X)
+                print(y_logits.shape)
+                # Logits -> pred probs
+                y_pred_probs = pt.softmax(y_logits, dim=softmax_dim)
+
+                y_pred = pt.argmax(y_pred_probs, dim=argmax_dim)
+                # print(y_pred)
+                # Put predictions on CPU for evaluation for matplotlib
+                y_preds.append(y_pred)
+
+        # Concatinate list of predictions to a tensor
+        y_preds = pt.cat(y_preds).cpu()
+        return y_preds
+
+# Gets a sample from the dataset
+def get_sample(dataset: datasets,amount:int,seed:int=None):
+    """Return a sample of pictures from the dataset, usable with make_predictions
+
+    args:
+        dataset: The dataset which the data is taken from
+        seed: The seed which generates randomness, None if full randomness
+        amount: The amount of samples and labels
     
+    returns:
+        (test_labels, test_samples)"""
+    import random
+    random.seed(seed)
+    test_samples = []
+    test_labels = []
+    # det den gör är att den tar 9 st samples genom värdet k från test_data
+    for sample, label in random.sample(list(dataset), k=amount):
+        test_samples.append(sample)
+        test_labels.append(label)
+    return test_labels, test_samples
+
+
+class view:
+    """A class which has functions that shows the pictures from the dataset
+    
+    funcs:
+        image(): show one image
+        rand_images() show many images"""
+
+    #* view an image
+    def image(img:pt.Tensor, label:str, color:plt.cm="gray"):
+        plt.imshow(img,cmap=color)
+        plt.title(label)
+        plt.axis(False)
+        plt.show()
+
+    # view many images
+    def rand_images(dataset,seed:int=None, nrows:int=3, ncols:int=3, color: plt.cm = "gray", figsize:tuple = (9,9)):
+        """Shows a grid of pictures from dataset with randomness"""
+        fig = plt.figure(figsize=figsize)
+        for i in range(1, nrows*ncols+1):
+            random_idx = pt.randint(0, len(dataset), size=[1]).item()
+            #print(random_idx,i)
+            img, label = dataset[random_idx]
+            fig.add_subplot(nrows, ncols, i)
+            plt.imshow(img.squeeze()) #, cmap="gray"
+            plt.title(dataset.classes[label])
+            plt.axis(False)
+    
+    def images(images, labels, classes:list=None, nrows:int=3, ncols:int=3, color:plt.cm = "gray", figsize: tuple = (9,9)):
+        if len(images) < nrows*ncols:
+            print('Too few images')
+            return 0
+        if len(labels) < nrows*ncols:
+            print('Too few labels')
+            return 0
+
+        if classes is not None:
+            labels = [classes[el] for el in labels]
+        
+        nprod = nrows*ncols
+        plt.figure(figsize=figsize)
+        for i in range(nprod):
+            plt.subplot(nrows, ncols, i+1)
+            plt.imshow(images[i], cmap=color)
+            plt.title(labels[i])
+            plt.axis(False)
+        plt.tight_layout()
+        plt.show()
+
+
+    def true_false(predictions, labels,samples, class_names, ncols, nrows, figsize: tuple = (9,9)):
+        nprod = ncols*nrows
+        if len(samples) < nprod:
+            print('To few samples for cols and rows')
+            return 0
+        plt.figure(figsize=figsize)
+        fig = plt.gcf()
+        fig.suptitle("Pred | True", fontsize=20)
+
+        for i, sample in enumerate(samples):
+            plt.subplot(nrows, ncols, i+1)
+            plt.imshow(sample.squeeze(), cmap="gray")
+            pred_label = class_names[predictions[i]]
+            true_label = class_names[labels[i]]
+            if pred_label == true_label:
+                plt.title(f"{pred_label} | {true_label}", c="g")
+            else:
+                plt.title(f"{pred_label} | {true_label}", c="r")
+            plt.axis(False)
+        plt.tight_layout()
+
+#* Chains functions with initial_data as the data in the first function  
+def function_chainer(initial_data:Union[tuple, List], func_list: List[Callable]) -> any:
+    """Chains functions in func_list with input as initial input and returns result
+
+    args:
+        initial_data (tuple): The initial data to be passed as arguments to the first function. 
+        func_list (List[Callable]): A list of functions to be executed sequentially. 
+            
+    Order: [a,b,c] -> c(b(a(initial_data)))
+
+    returns:
+        any: The final output after applying all the functions."""
+    output = func_list[0](*initial_data)
+    for func in func_list[1:]:
+        output = func(output)
+    return output
+
+def confusion_matrix(y_preds, targets, class_names):
+    from torchmetrics import ConfusionMatrix
+    from mlxtend.plotting import plot_confusion_matrix
+
+    # Setup a confusion matrix with a type and a number of classes
+    conf_mat = ConfusionMatrix('multiclass',num_classes=len(class_names))
+
+    # Gets a tensor using conf_mat 
+    conf_mat_tensor = conf_mat(preds=y_preds, target=targets) 
+    print(f"Our confusion matrix\n: {conf_mat_tensor}")
+
+    # Plot the confusion matrix
+    fig, ax = plot_confusion_matrix(
+        conf_mat=conf_mat_tensor.numpy(), # to numpy because it mpl likes np
+        class_names=class_names,
+        figsize=(10,7)
+    )
+
 def time_func(start:float, device:str = None):
     from timeit import default_timer
     """Returns the time between start and function call"""
