@@ -392,7 +392,10 @@ class view:
     
     funcs:
         image(): show one image
-        rand_images() show many images"""
+        rand_images() show many images
+        images(): Similar to image, but with many images
+        true_false(): Display which images that it got right and which it got wrong
+        plot_transformed_images(): Visualizes transformed and untransformed images"""
 
     #* view an image
     def image(img:pt.Tensor, label:str, color:plt.cm="gray"):
@@ -462,6 +465,36 @@ class view:
                 plt.title(f"{pred_label} | {true_label}", c="r")
             plt.axis(False)
         plt.tight_layout()
+
+    def plot_transformed_images(image_paths:str, transform:transforms, n:int=3, generator_seed:int=None, transform_seed:int=None):
+        """Plot difference between transformed images and normal
+
+        args:
+            image_paths (Sequence[Path()]): List of image file paths.
+            transform (torchvision.transforms): Image transformation object.
+            num_images (int, optional): Number of images to display. Default is 3.
+            generator_seed (int, optional): Random seed for image selection. Default is None.
+            generator_seed (int, optional): Random seed for transform selection. Default is None."""
+        from random import sample, seed as random_seed
+        random_seed(generator_seed)
+        pt.manual_seed(transform_seed)
+        image_paths = sample(image_paths,k=n)
+        fig, ax = plt.subplots(nrows=len(image_paths),ncols=2)
+        for i,img_path in enumerate(image_paths):
+            with Image.open(img_path) as f:
+                ax[i,0].imshow(f)
+                ax[i,1].imshow(transform(f).permute(1,2,0))
+                ax[i,0].axis(False)
+                ax[i,0].set_title(f"Size: {f.size}")
+                ax[i,1].axis(False)
+                ax[i,1].set_title(f'Size: ({str(transform(f).permute(1,2,0).size())[12:-2]})')
+
+        plt.tight_layout(w_pad=-10)
+
+        plt.subplots_adjust(top=0.8)
+        plt.suptitle('Images\nOriginal    Transformed', fontsize=20)
+        plt.show()
+
 
 #* Chains functions with initial_data as the data in the first function  
 def function_chainer(initial_data:Union[tuple, List], func_list: List[Callable]) -> any:
