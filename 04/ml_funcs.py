@@ -404,13 +404,19 @@ class view:
     # view many images
     def rand_images(dataset,seed:int=None, nrows:int=3, ncols:int=3, color: plt.cm = "gray", figsize:tuple = (9,9)):
         """Shows a grid of pictures from dataset with randomness"""
+        from random import seed as random_seed
+        pt.manual_seed(seed)
+        random_seed(seed)
         fig = plt.figure(figsize=figsize)
         for i in range(1, nrows*ncols+1):
             random_idx = pt.randint(0, len(dataset), size=[1]).item()
-            #print(random_idx,i)
             img, label = dataset[random_idx]
             fig.add_subplot(nrows, ncols, i)
-            plt.imshow(img.squeeze()) #, cmap="gray"
+            if img.shape[0] == 3: 
+                img = img.permute(1,2,0)
+            elif img.shape[0] == 1:
+                img = img.squeeze()
+            plt.imshow(img) #, cmap="gray"
             plt.title(dataset.classes[label])
             plt.axis(False)
     

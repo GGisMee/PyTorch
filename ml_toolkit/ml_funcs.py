@@ -396,12 +396,6 @@ class view:
 
     #* view an image
     def image(img:pt.Tensor, label:str, color:plt.cm="gray"):
-        """Shows the image chosen
-        
-        args:
-            img: image tensor chosen
-            label: the label describing the tensor
-            color: colormap on the picture"""
         plt.imshow(img,cmap=color)
         plt.title(label)
         plt.axis(False)
@@ -409,37 +403,24 @@ class view:
 
     # view many images
     def rand_images(dataset,seed:int=None, nrows:int=3, ncols:int=3, color: plt.cm = "gray", figsize:tuple = (9,9)):
-        """Shows a grid of pictures from dataset with randomness
-        
-        args:
-            dataset: The dataset which the data is taken from
-            seed: the seed which chooses randomness
-            nrows: number of rows on display
-            ncols: number of columns on display
-            color: colormap which colors picture
-            figsize: size of figure"""
+        """Shows a grid of pictures from dataset with randomness"""
+        from random import seed as random_seed
         pt.manual_seed(seed)
+        random_seed(seed)
         fig = plt.figure(figsize=figsize)
         for i in range(1, nrows*ncols+1):
             random_idx = pt.randint(0, len(dataset), size=[1]).item()
-            #print(random_idx,i)
             img, label = dataset[random_idx]
             fig.add_subplot(nrows, ncols, i)
-            plt.imshow(img.squeeze(), cmap=color) #, cmap="gray"
+            if img.shape[0] == 3: 
+                img = img.permute(1,2,0)
+            elif img.shape[0] == 1:
+                img = img.squeeze()
+            plt.imshow(img) #, cmap="gray"
             plt.title(dataset.classes[label])
             plt.axis(False)
     
-    def images(images:List[pt.Tensor], labels, classes:list=None, nrows:int=3, ncols:int=3, color:plt.cm = "gray", figsize: tuple = (9,9)):
-        """Shows images
-        
-        args:
-            images: pictures to display
-            labels: display above pictures
-            classes: To turn labels to string
-            nrows: number of rows
-            ncols: number of columns
-            color: colors the pictures
-            figsize: size of figure"""
+    def images(images, labels, classes:list=None, nrows:int=3, ncols:int=3, color:plt.cm = "gray", figsize: tuple = (9,9)):
         if len(images) < nrows*ncols:
             print('Too few images')
             return 0
@@ -461,17 +442,7 @@ class view:
         plt.show()
 
 
-    def true_false(predictions:pt.Tensor, labels,samples:List[pt.Tensor], class_names:list, ncols:int, nrows:int, figsize: tuple = (9,9)):
-        """Shows a sample of pictures
-        
-        args:
-            predictions (pt.Tensor): A PyTorch tensor containing predicted labels.
-            labels: A list of true labels.
-            samples (List[pt.Tensor]): A list of PyTorch tensors representing images.
-            class_names (list): A list of class names corresponding to label values.
-            ncols (int): Number of columns in the image grid.
-            nrows (int): Number of rows in the image grid.
-            figsize (tuple, optional): Size of the figure (width, height). Default is (9, 9)."""
+    def true_false(predictions, labels,samples, class_names, ncols, nrows, figsize: tuple = (9,9)):
         nprod = ncols*nrows
         if len(samples) < nprod:
             print('To few samples for cols and rows')
@@ -510,13 +481,6 @@ def function_chainer(initial_data:Union[tuple, List], func_list: List[Callable])
     return output
 
 def confusion_matrix(y_preds, targets, class_names):
-    """Compute and visualize a confusion matrix
-    
-        args:
-            y_preds (torch.Tensor): Predicted labels or probabilities.
-            targets (torch.Tensor): True labels.
-            class_names (list): List of class names corresponding to label values."""
-
     from torchmetrics import ConfusionMatrix
     from mlxtend.plotting import plot_confusion_matrix
 
@@ -535,12 +499,8 @@ def confusion_matrix(y_preds, targets, class_names):
     )
 
 def time_func(start:float, device:str = None):
-    """Returns and prints the time between start and function call
-    
-    args:
-        start: When the timer is start, should be a timeit.default_timer()
-        device: What the timer has been used on"""
     from timeit import default_timer
+    """Returns the time between start and function call"""
     total_time = default_timer() -start
     print(f"\nTrain time on {device}: {total_time:.3f} seconds")
     return total_time
