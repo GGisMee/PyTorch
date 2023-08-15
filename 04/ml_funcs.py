@@ -243,7 +243,7 @@ class Model_operations:
 
             # Accumulate values
             train_loss += loss # accumulate train loss
-            train_acc += accuracy_fn(y, y_logits.argmax(dim=1)) # accumulate accuracy, goes from logits -> prediction labels with argmax(dim=1)
+            train_acc += accuracy_fn(y, y_logits) # accumulate accuracy, goes from logits -> prediction labels with argmax(dim=1)
 
             # optimizer zero grad, Loss backward,   Optimizer step
             optimizer.zero_grad(); loss.backward(); optimizer.step()
@@ -466,7 +466,8 @@ class view:
             plt.axis(False)
         plt.tight_layout()
 
-    def plot_transformed_images(image_paths:str, transform:transforms, n:int=3, generator_seed:int=None, transform_seed:int=None):
+    def plot_transformed_images(image_paths:str, transform, n:int=3, generator_seed:int=None, transform_seed:int=None):
+        from PIL import Image
         """Plot difference between transformed images and normal
 
         args:
@@ -531,9 +532,62 @@ def confusion_matrix(y_preds, targets, class_names):
         figsize=(10,7)
     )
 
-def time_func(start:float, device:str = None):
-    from timeit import default_timer
-    """Returns the time between start and function call"""
-    total_time = default_timer() -start
-    print(f"\nTrain time on {device}: {total_time:.3f} seconds")
-    return total_time
+from timeit import default_timer
+class Timer:
+    """A simple Timer
+    
+    funcs:
+        init(): Starts the Timer
+        get(): Get the Timers content and returns the values (full timer, interval list, since start list)
+        interval(): Times since last interval
+        since_start(): Times since initialization
+        show_as_print(): Shows the output in a formated way"""
+    def __init__(self):
+        """Starts the timer"""
+        self.starttimer = default_timer()
+        self.since_last = [['start', self.starttimer]]
+        self.since_start_list = [['start', self.starttimer]]
+        self.stop_value = None
+    def interval(self, name:str = 'Interval N'):
+        """creates instance with time since last instance"""
+        interval_value = default_timer()
+        if name == 'Interval N':
+            name = f'Interval {len(self.since_last)}'
+        self.since_last.append([name, interval_value])
+    def since_start(self, name:str = 'Timer N'):
+        """creates instance with time since start"""
+        partial_stop_v = default_timer()
+        if name == 'Timer N':
+            name = f'Timer {len(self.since_start_list)}'
+        self.since_start_list.append([name, partial_stop_v-self.starttimer])
+
+    def get(self) -> tuple[int, list, list]:
+        """returns (full timer, interval list, since start list)"""
+        self.stop_value = default_timer()-self.starttimer
+        return (self.stop_value, self.since_last, self.since_start_list)
+    
+    def show_as_print(self, start_interval_since_decimals: tuple = (2,2,2)):
+        """Prints out the values"""
+        start_decimals = f'.{start_interval_since_decimals[0]}f'
+        interval_decimals = f'.{start_interval_since_decimals[1]}f'
+        since_decimals = f'.{start_interval_since_decimals[2]}f'
+        
+        text = f'''Timer: by GGisMee\n=================\n'''
+        if self.stop_value: # om man har stoppat
+            text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
+        if self.since_last != [['start', self.starttimer]]:
+            
+            since_last_display = [[name, timeobj-self.since_last[i][1]] for i,(name, timeobj) in enumerate(self.since_last[1:])]
+            since_last_display = [[name,f"{number:{interval_decimals}}"] for name,number in since_last_display]
+            
+            text+='Interval time: \n'
+            for el in since_last_display:
+                text += f'{el[0]}: {el[1]}\n'
+            text+='=================\n'
+        if self.since_start_list != [['start', self.starttimer]]:
+            text+='Time since start: \n'
+            since_start_list_display = [[name,f"{number:{since_decimals}}"] for name,number in self.since_start_list[1:]]
+            for el in since_start_list_display:
+                text+= f'{el[0]}: {el[1]}\n'
+            text+='=================\n'
+        print(text)
