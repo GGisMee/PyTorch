@@ -167,7 +167,6 @@ class Model_operations:
     def eval_model(model:pt.nn.Module, 
                    data_loader: pt.utils.data.DataLoader, 
                    loss_fn: pt.nn.Module,
-                   accuracy_fn,
                    device:str):
         """Evaluates the models performence and returns a dictionary containing the results of model predicting on data_loader
 
@@ -175,7 +174,6 @@ class Model_operations:
             model: the chosen model
             data_loader: the data_loader from which the data is loaded from
             loss_fn: function which calculates the loss
-            accuracy_fn: function which calculates the accuracy
             diff_viewer: if you want to directly append your results to a diff_viewer then add a diff viewer
 
         returns:
@@ -196,7 +194,9 @@ class Model_operations:
 
                 # Accumulate the loss and acc values per batch
                 loss += loss_fn(y_pred_logits, y)
-                acc += accuracy_fn(y, y_pred_logits.argmax(dim=1))
+                
+                y_preds = pt.argmax(pt.softmax(y_pred_logits, dim=1), dim=1)
+                acc += pt.eq(y_preds, y).sum().item()/len(y_preds)
 
             # Get the average loss and acc per batch, by deviding by total
             loss /= len(data_loader)
@@ -563,7 +563,7 @@ class Timer:
         interval_decimals = f'.{start_interval_since_decimals[1]}f'
         since_decimals = f'.{start_interval_since_decimals[2]}f'
         
-        text = f'''Timer: by GGisMee\n=================\n'''
+        text = f'''\nTimer: by GGisMee\n=================\n'''
         if self.stop_value: # om man har stoppat
             text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
         if self.since_last != [['start', self.starttimer]]:
