@@ -8,7 +8,6 @@ from typing import List, Callable, Union
 from torchvision import datasets
 from tqdm.auto import tqdm
 
-
 #* data viewers
 class data_manager:
     def __init__(self, column_names: np.array = []):
@@ -151,7 +150,7 @@ class save_load:
         args:
             name: The name of the file where the model got saved
             path: The path where the file exists"""
-        pt.load(f=f"{path}/{name}.pth")
+        return pt.load(f=f"{path}/{name}.pth")
 #* Does Model operations
 class Model_operations:
     """Does operations on the chosen model
@@ -252,8 +251,7 @@ class Model_operations:
         train_loss /= len(dataloader)
         train_acc  /= len(dataloader)
 
-        if show:
-            print(f'Train loss: {train_loss} | Train acc: {train_acc}')
+        print(f'Train loss: {train_loss} | Train acc: {train_acc}') if show else None
         return train_loss, train_acc
 
     # Steps through the testing loop
@@ -288,8 +286,59 @@ class Model_operations:
                 test_acc += pt.eq(y_preds, y).sum().item()/len(y_preds)
         test_loss /= len(dataloader)
         test_acc  /= len(dataloader)
-        if show:
-            print(f'Test loss: {test_loss} | Test acc: {test_acc}')
+        
+        print(f'Test loss: {test_loss} | Test acc: {test_acc}') if show else None
+        return test_loss, test_acc
+
+
+    def train(epochs:int, model:pt.nn.Module, train_dataloader:pt.utils.data.DataLoader, test_dataloader:pt.utils.data.DataLoader, loss_fn, optimizer:pt.optim.Optimizer, device:pt.device,show:bool):
+        """Trains the model, loops through train and test step
+        
+        args:
+            epochs: The number of loops done
+            model: Which model to train on
+            train_dataloader: The dataloader to train on
+            test_dataloader: The dataloader to test on
+            loss_fn: A function which describes how wrong the model is 
+            optimizer: A class that optimizes a model using various technics
+            device: The device which the model trains on i.e (cpu, gpu, tpu, mps)
+            show: Should the results be shown? True/False
+            
+            returns:
+                {train_loss":[...], 
+                  train_acc":[...], 
+                  test_loss":[...], 
+                   test_acc":[...]
+                   }"""
+        # Create an empty dictionary to hold results in
+        results = {
+            "train_loss":[], 
+            "train_acc":[], 
+            "test_loss":[], 
+            "test_acc":[]
+            }
+
+        for epoch in tqdm(range(epochs)):
+            print(f'Epoch: {epoch}') if show else None
+            train_loss, train_acc = Model_operations.train_step(
+                model=model,
+                dataloader=train_dataloader,
+                loss_fn=loss_fn,
+                optimizer=optimizer,
+                device=device,
+                show=show)
+
+            test_loss, test_acc = Model_operations.test_step(
+                model=model, 
+                dataloader= test_dataloader, 
+                loss_fn= loss_fn, 
+                device= device, 
+                show=show
+                )
+
+            # Append our values to results
+            results["train_loss"].append(train_loss); results["train_acc"].append(train_acc)
+            results["test_loss"].append(test_loss); results["test_acc"].append(test_acc)
 
 
     def make_predictions(model:pt.nn.Module, sample:list, device:pt.device) -> pt.Tensor:
@@ -564,8 +613,9 @@ class Timer:
         since_decimals = f'.{start_interval_since_decimals[2]}f'
         
         text = f'''\nTimer: by GGisMee\n=================\n'''
-        if self.stop_value: # om man har stoppat
-            text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
+        if not self.stop_value: # om man inte har stoppat än
+            self.stop_value = default_timer()-self.starttimer   
+        text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
         if self.since_last != [['start', self.starttimer]]:
             
             since_last_display = [[name, timeobj-self.since_last[i][1]] for i,(name, timeobj) in enumerate(self.since_last[1:])]
