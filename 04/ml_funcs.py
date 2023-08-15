@@ -564,8 +564,9 @@ class Timer:
         since_decimals = f'.{start_interval_since_decimals[2]}f'
         
         text = f'''\nTimer: by GGisMee\n=================\n'''
-        if self.stop_value: # om man har stoppat
-            text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
+        if not self.stop_value: # om man inte har stoppat än
+            self.stop_value = default_timer()-self.starttimer   
+        text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
         if self.since_last != [['start', self.starttimer]]:
             
             since_last_display = [[name, timeobj-self.since_last[i][1]] for i,(name, timeobj) in enumerate(self.since_last[1:])]
