@@ -292,7 +292,7 @@ class Model_operations:
 
                 # Acumulate the loss and accuracy
                 test_loss += loss_fn(test_logits, y)
-                test_acc += accuracy_fn(y, test_logits.argmax(dim=1))
+                test_acc += accuracy_fn(y, test_logits)
 
             # Calculate the loss (avg per batch) and accuracy
             test_loss /= len(dataloader)
