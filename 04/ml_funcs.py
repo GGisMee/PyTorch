@@ -167,7 +167,6 @@ class Model_operations:
     def eval_model(model:pt.nn.Module, 
                    data_loader: pt.utils.data.DataLoader, 
                    loss_fn: pt.nn.Module,
-                   accuracy_fn,
                    device:str):
         """Evaluates the models performence and returns a dictionary containing the results of model predicting on data_loader
 
@@ -175,7 +174,6 @@ class Model_operations:
             model: the chosen model
             data_loader: the data_loader from which the data is loaded from
             loss_fn: function which calculates the loss
-            accuracy_fn: function which calculates the accuracy
             diff_viewer: if you want to directly append your results to a diff_viewer then add a diff viewer
 
         returns:
@@ -196,7 +194,9 @@ class Model_operations:
 
                 # Accumulate the loss and acc values per batch
                 loss += loss_fn(y_pred_logits, y)
-                acc += accuracy_fn(y, y_pred_logits.argmax(dim=1))
+                
+                y_preds = pt.argmax(pt.softmax(y_pred_logits, dim=1), dim=1)
+                acc += pt.eq(y_preds, y).sum().item()/len(y_preds)
 
             # Get the average loss and acc per batch, by deviding by total
             loss /= len(data_loader)
@@ -208,13 +208,12 @@ class Model_operations:
                     }
 
     # Steps through the training loop
-    def train_step(model: pt.nn.Module,
-               dataloader:pt.utils.data.DataLoader,
-               optimizer:pt.optim.Optimizer,
-               loss_fn:pt.nn.Module,
-               accuracy_fn,
-               device:pt.device = "cpu",
-               show:bool = False) -> tuple:
+    def train_step(model: pt.nn.Module, 
+               dataloader:pt.utils.data.DataLoader, 
+               loss_fn: pt.nn.Module, 
+               optimizer:pt.optim.Optimizer, 
+               device:pt.device, 
+               show:bool=False):
         """Performs a training step with model trying to learn on data_loader
 
         args:
@@ -227,41 +226,42 @@ class Model_operations:
             show: if true display the loss and acc in console 
 
         returns:
-            if show: (loss, accuracy) else None"""
-        train_loss, train_acc = 0,0
-        ### Training
+            (loss, accuracy)"""
+        # Put model in training mode
         model.train()
-        for batch, (X,y) in enumerate(dataloader):
-            # Put data to the right device
-            X,y = X.to(device), y.to(device)
 
-            # 1. Forward pass
+        # Setup train loss and train accuracy values
+        train_loss, train_acc = 0,0
+
+        # Loop through data loader batches
+        for X,y in dataloader:
+            # Send data to target device
+            X, y = X.to(device), y.to(device)
+
             y_logits = model(X)
 
-            # 2. Calculate the loss
             loss = loss_fn(y_logits, y)
+            train_loss+=loss.item()
 
-            # Accumulate values
-            train_loss += loss # accumulate train loss
-            train_acc += accuracy_fn(y, y_logits) # accumulate accuracy, goes from logits -> prediction labels with argmax(dim=1)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-            # optimizer zero grad, Loss backward,   Optimizer step
-            optimizer.zero_grad(); loss.backward(); optimizer.step()
-
-        # Devide total train loss and acc by length of train dataloader
+            y_preds = pt.argmax(pt.softmax(y_logits, dim=1), dim=1) # Softmax is actually unnecessary, but can be useful for visualization and also to give completeness
+            train_acc += pt.eq(y_preds, y).sum().item()/len(y_preds)
         train_loss /= len(dataloader)
-        train_acc /= len(dataloader)
+        train_acc  /= len(dataloader)
 
-        print(f"train loss: {train_loss}, train accuracy: {train_acc}") if show else None
-        return (train_loss, train_acc) 
+        if show:
+            print(f'Train loss: {train_loss} | Train acc: {train_acc}')
+        return train_loss, train_acc
 
-    # Steps through the test loop
-    def test_step(model: pt.nn.Module,
-               dataloader:pt.utils.data.DataLoader,
-               loss_fn:pt.nn.Module,
-               accuracy_fn,
-               device:pt.device = "cpu",
-               show:bool = False) -> tuple:
+    # Steps through the testing loop
+    def test_step(model: pt.nn.Module, 
+              dataloader:pt.utils.data.DataLoader, 
+              loss_fn: pt.nn.Module, 
+              device:pt.device, 
+              show:bool=False):
         """Performs a testing loop step on model going over data_loader.
 
         args:
@@ -273,33 +273,24 @@ class Model_operations:
             show: if true display the loss and acc in console 
 
         returns:
-            if show: (loss, accuracy) else None"""
+            (loss, accuracy)"""
+        test_acc, test_loss = 0,0
 
-        # Create loss and acc variables
-        test_loss, test_acc = 0, 0
-
-        # Puts the model on evaluation mode
         model.eval()
-
-        # Turn on inference mode (Predictions mode) to look at the data  
         with pt.inference_mode():
             for X,y in dataloader:
-                # Device agnostic
-                X.to(device), y.to(device)
+                X,y = X.to(device), y.to(device)
+                y_logits = model(X)
+                loss = loss_fn(y_logits, y)
+                test_loss+=loss.item()
 
-                # Forward pass
-                test_logits = model(X)
+                y_preds = pt.argmax(pt.softmax(y_logits, dim=1), dim=1)
+                test_acc += pt.eq(y_preds, y).sum().item()/len(y_preds)
+        test_loss /= len(dataloader)
+        test_acc  /= len(dataloader)
+        if show:
+            print(f'Test loss: {test_loss} | Test acc: {test_acc}')
 
-                # Acumulate the loss and accuracy
-                test_loss += loss_fn(test_logits, y)
-                test_acc += accuracy_fn(y, test_logits)
-
-            # Calculate the loss (avg per batch) and accuracy
-            test_loss /= len(dataloader)
-            test_acc /= len(dataloader)
-
-        print(f"Test loss: {test_loss:.4f}, Test acc: {test_acc:.4f}") if show else None
-        return test_loss, test_acc
 
     def make_predictions(model:pt.nn.Module, sample:list, device:pt.device) -> pt.Tensor:
         """Makes predictions on inputed sample, which should be a list with image tensors inside examplewise [pt.tensor(...),pt.tensor(...),pt.tensor(...),...]
@@ -572,7 +563,7 @@ class Timer:
         interval_decimals = f'.{start_interval_since_decimals[1]}f'
         since_decimals = f'.{start_interval_since_decimals[2]}f'
         
-        text = f'''Timer: by GGisMee\n=================\n'''
+        text = f'''\nTimer: by GGisMee\n=================\n'''
         if self.stop_value: # om man har stoppat
             text+= f'''Total time:\n {self.stop_value:{start_decimals}}\n=================\n'''
         if self.since_last != [['start', self.starttimer]]:
