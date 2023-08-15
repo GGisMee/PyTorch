@@ -196,7 +196,7 @@ class Model_operations:
 
                 # Accumulate the loss and acc values per batch
                 loss += loss_fn(y_pred_logits, y)
-                acc += accuracy_fn(y, y_pred_logits.argmax(dim=1))
+                acc += accuracy_fn(y, y_pred_logits)
 
             # Get the average loss and acc per batch, by deviding by total
             loss /= len(data_loader)
