@@ -265,7 +265,7 @@ def download_data(source: str,
                       destination="pizza_steak_sushi")
     """
     # Setup path to data folder
-    data_path = Path("data/")
+    data_path = Path("data/") 
     image_path = data_path / destination
 
     # If the image folder doesn't exist, download it and prepare it... 
