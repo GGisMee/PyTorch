@@ -339,6 +339,7 @@ class Model_operations:
             # Append our values to results
             results["train_loss"].append(train_loss); results["train_acc"].append(train_acc)
             results["test_loss"].append(test_loss); results["test_acc"].append(test_acc)
+        return results
 
 
     def make_predictions(model:pt.nn.Module, sample:list, device:pt.device) -> pt.Tensor:
