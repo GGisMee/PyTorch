@@ -612,10 +612,10 @@ class Timer:
         return (self.stop_value, self.since_last, self.since_start_list)
     
     def __getitem__(self, index):
-        if index > len(self.since_last):
+        if index > len(self.since_last[1:]):
             print('Unable, as index is greater then length of list')
             return 0
-        return self.since_last[index]
+        return self.since_last[index[1:]]
 
 
     def show_as_print(self, decimals: tuple = (2,2,2)):
