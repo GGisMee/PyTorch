@@ -1,0 +1,41 @@
+{
+    "os": "macOS-12.6.6-x86_64-i386-64bit",
+    "python": "3.11.1",
+    "heartbeatAt": "2023-08-20T10:08:50.740896",
+    "startedAt": "2023-08-20T10:08:50.025914",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": "https://github.com/GGisMee/PyTorch.git",
+        "commit": "54bc42b09adb5c32937a34a412f673b0e2a52e55"
+    },
+    "email": "gustav.gamstedt@outlook.com",
+    "root": "/Users/gustavgamstedt/Desktop/github to hemma/PyTorch",
+    "host": "Gustavs-iMac.local",
+    "username": "gustavgamstedt",
+    "executable": "/usr/local/bin/python3",
+    "cpu_count": 4,
+    "cpu_count_logical": 4,
+    "cpu_freq": {
+        "current": 3300,
+        "min": 3300,
+        "max": 3300
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3300,
+            "min": 3300,
+            "max": 3300
+        }
+    ],
+    "disk": {
+        "total": 1975.6259841918945,
+        "used": 19.983074188232422
+    },
+    "memory": {
+        "total": 8.0
+    }
+}
