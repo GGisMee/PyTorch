@@ -33,7 +33,7 @@ def train_step(model: pt.nn.Module,
   train_loss, train_acc = 0, 0
 
   # Loop through data loader data batches
-  for batch, (X, y) in enumerate(dataloader):
+  for X, y in dataloader:
       # Send data to target device
       X, y = X.to(device), y.to(device)
 

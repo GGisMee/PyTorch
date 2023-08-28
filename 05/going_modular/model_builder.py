@@ -51,5 +51,6 @@ class TinyVGG(nn.Module):
   def forward(self, x: torch.Tensor):
       x = self.conv_block_1(x)
       x = self.conv_block_2(x)
+      # print(x.shape)
       x = self.classifier(x)
       return x

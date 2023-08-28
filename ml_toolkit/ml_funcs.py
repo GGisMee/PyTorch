@@ -377,7 +377,7 @@ class Model_operations:
         return pt.stack(pred_probs)
 
     def predict_all(model, dataloader, device, softmax_dim: int = 1, argmax_dim: int= 1):
-        """Make prediction on trained model usin dataloader
+        """Make prediction on trained model using dataloader
         
         args:
             model: the model which predicts on the data
