@@ -16,4 +16,4 @@ def create_dataloaders(
     class_names = train_data.classes
     train_dataloader = DataLoader(train_data, batch_size, True, num_workers=num_workers)
     test_dataloader = DataLoader(test_data, batch_size, False, num_workers=num_workers)
-    return train_dataloader, test_dataloader, class_names
+    return train_dataloader, test_dataloader, class_names, train_data, test_data
