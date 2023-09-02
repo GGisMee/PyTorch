@@ -539,7 +539,26 @@ class view:
         plt.subplots_adjust(top=0.8)
         plt.suptitle('Images\nOriginal    Transformed', fontsize=20)
         plt.show()
+    def plot_wrong(y_preds:pt.Tensor, targets:pt.Tensor, images:list[pt.Tensor], classes:list[str]=None):
+        from math import floor,sqrt
+        wrong_idx = pt.where(pt.eq(pt.tensor(y_preds),pt.tensor(targets))==False)[0].tolist()
+        nrows_ncols = (floor(sqrt(len(wrong_idx))))
+        # wrong_preds = y_preds[wrong_idx]
+        # wrong_targets = targets[wrong_idx]
+        # wrong_images = [images[i] for i in wrong_idx]
 
+        for index, i in list(enumerate(wrong_idx))[:nrows_ncols**2]:
+            plt.subplot(nrows_ncols,nrows_ncols, index+1)
+            plt.imshow(images[i].permute(1,2,0))
+            plt.axis(False)
+            if classes:
+                plt.title(f'pred: {classes[y_preds[i]]} | target: {classes[targets[i]]}')
+            else:
+                plt.title(f'pred: {y_preds[i]} | target: {targets[i]}')
+        plt.show()
+    
+
+    
 
 #* Chains functions with initial_data as the data in the first function  
 def function_chainer(initial_data:Union[tuple, List], func_list: List[Callable]) -> any:
