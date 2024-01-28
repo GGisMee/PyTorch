@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import os
-from ml_funcs import save_load
 
 
 class Linear_QNet(nn.Module):
@@ -35,9 +34,9 @@ class QTrainer:
 
     def train_step(self, state, action, reward, next_state, done):
         state = pt.tensor(state, dtype=pt.float)
-        next_state = pt.tensor(state, dtype=pt.float)
-        action = pt.tensor(state, dtype=pt.float)
-        reward = pt.tensor(state, dtype=pt.float)
+        next_state = pt.tensor(next_state, dtype=pt.float)
+        action = pt.tensor(action, dtype=pt.long)
+        reward = pt.tensor(reward, dtype=pt.float)
 
         if len(state.shape) == 1: # if we have 1 number
             # (1, x) to make 52+ functional
@@ -55,7 +54,7 @@ class QTrainer:
             if not done[i]: # bc if done there are no future states
                 Q_new = reward[i] + self.gamma*pt.max(self.model(next_state[i]))
                 # basically it takes the reward as the Q value and adds the next reward which might come when the nn continues
-            target[i][pt.argmax(action[i]).item()] = Q_new
+            target[i][pt.argmax(action).item()] = Q_new
             # picks out one state and 
 
 
@@ -63,7 +62,7 @@ class QTrainer:
         # pred.clone()
         # preds[argmax(action)] = Q_new
 
-        # like in a training loop
+        # like in a training lo
         loss = self.loss_func(target, pred)
         self.optim.zero_grad()
         loss.backward()

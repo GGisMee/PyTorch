@@ -1,0 +1,4 @@
+
+Create an version for 4 in a row somehow. 
+Follow the tutorial for mario
+Create a replica for snake

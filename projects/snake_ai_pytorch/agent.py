@@ -5,6 +5,7 @@ import numpy as np
 from collections import deque
 from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
+from helper import plot
 
 MAX_MEMORY = 100_000 # items in the memory
 BATCH_SIZE = 1000
@@ -20,7 +21,7 @@ class Agent:
         self.gamma = 0.9 # discount rate<1, around 0.8-0.9 often
         self.memory = deque(maxlen=MAX_MEMORY) # popleft() if memory exceeded
         # model, trainer
-        self.model = Linear_QNet(11, HIDDEN_UNITS, 3)
+        self.model = Linear_QNet(input_features=11, output_features=3, hidden_units=HIDDEN_UNITS)
         self.trainer = QTrainer(self.model, LR, gamma=self.gamma)
 
 
@@ -99,11 +100,12 @@ class Agent:
             prediction = self.model(state0) # forward = predict
             move = torch.argmax(prediction).item()
             final_move[move] = 1
-        return 
+        return final_move
 
 def train():
     plot_scores = []
     plot_mean_scores = []
+    plot_mean_five_scores = []
     total_score = 0
     record = 0
     agent = Agent()
@@ -113,13 +115,13 @@ def train():
         state_old = agent.get_state(game)
 
         # get move
-        final_move = agent.get_action()
+        final_move = agent.get_action(state_old)
 
         # perform move + get new state
         reward, done, score = game.play_step(final_move)
         state_new = agent.get_state(game)
 
-        agent.train_short_memory(state_old, final_move, reward, state_new, done)
+        agent.train_short_memory(state = state_old, action = final_move, reward= reward, next_state = state_new, done = done)
 
         # remember
         agent.remember(state_old, final_move, reward, state_new, done)
@@ -136,7 +138,18 @@ def train():
                 # agent.model.save()
             print("Game: ", agent.n_games, "  Score: ", score, "  Record: ", record)
 
-            # TODO: plot
+            # plot
+
+            plot_scores.append(score)
+            total_score += score
+            mean_score = total_score/ agent.n_games
+            plot_mean_scores.append(mean_score)
+
+            mean_five_score = sum(plot_scores[-20:])/20
+            plot_mean_five_scores.append(mean_five_score)
+
+            plot(plot_scores, plot_mean_scores, plot_mean_five_scores)
+
         
 
 if __name__ == "__main__":
