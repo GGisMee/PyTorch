@@ -1,0 +1,5 @@
+The plan
+* Setup a mario env
+* Preprocess the game for ai
+* train the model to play mario
+* take a look at the final result
