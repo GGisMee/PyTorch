@@ -5,3 +5,5 @@ Create an version for 4 in a row somehow.
 NOT: Follow the tutorial for mario
 Follow other tutorials like this: https://h-huang.github.io/tutorials/intermediate/reinforcement_q_learning.html
 Maybe this as well: https://www.google.com/search?q=pytorch+reinforcement+learning+pytorch+tutorial&rlz=1C5CHFA_enSE928SE928&oq=pytor&gs_lcrp=EgZjaHJvbWUqBggAEEUYOzIGCAAQRRg7MgYIARBFGDsyBggCEEUYOTIGCAMQRRg7MgYIBBBFGDwyBggFEEUYPDIGCAYQRRg8MgYIBxBFGDzSAQg2OTA4ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8#fpstate=ive&ip=1&vld=cid:87ceaf7f,vid:wc-FxNENg9U,st:0
+
+Pytorch model, which calculates the score for a character in GI to one person. Inputs can be gender, age [0,0,0] (young, middle, old), sus, longhair, light/dark, and so on 
