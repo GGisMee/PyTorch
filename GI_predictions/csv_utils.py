@@ -135,3 +135,4 @@ class fuseCSV:
     
         
 
+fuseCSV(left_file='db.csv', right_file='output.csv', new_file='newdb', dir='/Users/gustavgamstedt/Desktop/github to hemma/PyTorch/GI_predictions/data',del_row_1_right=True)
